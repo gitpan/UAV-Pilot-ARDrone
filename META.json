@@ -34,16 +34,22 @@
             "MooseX::Event" : "0",
             "String::CRC32" : "0",
             "Test::More" : "0",
+            "Time::HiRes" : "0",
             "UAV::Pilot" : ">= 0.9",
             "namespace::autoclean" : "0",
             "perl" : ">= 5.14.0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::Pod" : "0"
          }
       }
    },
    "provides" : {
       "UAV::Pilot::ARDrone" : {
          "file" : "lib/UAV/Pilot/ARDrone.pm",
-         "version" : "0.1"
+         "version" : "0.2"
       },
       "UAV::Pilot::ARDrone::Control" : {
          "file" : "lib/UAV/Pilot/ARDrone/Control.pm"
@@ -73,11 +79,11 @@
    "release_status" : "stable",
    "resources" : {
       "license" : [
-         "http://opensource.org/licenses/bsd-license.php"
+         "http://opensource.org/licenses/BSD-3-Clause"
       ],
       "repository" : {
          "url" : "https://github.com/frezik/UAV-Pilot-ARDrone"
       }
    },
-   "version" : "0.1"
+   "version" : "0.2"
 }

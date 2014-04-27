@@ -1,3 +1,26 @@
+# Copyright (c) 2014  Timm Murray
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright notice, 
+#       this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright 
+#       notice, this list of conditions and the following disclaimer in the 
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
 package UAV::Pilot::ARDrone::SDLNavOutput;
 use v5.14;
 use Moose;
@@ -43,6 +66,9 @@ use constant {
     VERT_SPEED_DISPLAY_WIDTH       => 10,
     VERT_SPEED_BORDER_WIDTH_MARGIN => 2,
     BATTERY_DISPLAY_X              => 450,
+
+    ROLL_PITCH_YAW_MAX_VALUE        => 30_000,
+    FEEDER_ROLL_PITCH_YAW_MAX_VALUE => 1.0,
 
     LINE_VALUE_HALF_MAX_HEIGHT => 10,
     LINE_VALUE_HALF_LENGTH     => 40,
@@ -242,8 +268,8 @@ sub draw
         $self->ROLL_VALUE_X,     30, $txt_val );
     $window->draw_txt( sprintf('%.2f', $nav->pitch ),
         $self->PITCH_VALUE_X,    30, $txt_val );
-    $window->draw_txt( sprintf('%.2f', $nav->yaw ),
-        $self->YAW_VALUE_X,      30, $txt_val );
+    #$window->draw_txt( sprintf('%.2f', $nav->yaw ),
+    #    $self->YAW_VALUE_X,      30, $txt_val );
     $window->draw_txt( sprintf('%.2f cm', $nav->altitude ),
         $self->ALTITUDE_VALUE_X,     30, $txt_val );
     $window->draw_txt( $nav->battery_voltage_percentage . '%',
@@ -255,12 +281,15 @@ sub draw
     if( defined $feeder) {
         my $feeder_line_color = $self->DRAW_FEEDER_VALUE_COLOR;
         $self->_draw_line_value( $feeder->cur_roll,
+            $self->FEEDER_ROLL_PITCH_YAW_MAX_VALUE,
             $self->ROLL_DISPLAY_X,  100,
             $feeder_line_color, $window );
         $self->_draw_line_value( $feeder->cur_pitch,
+            $self->FEEDER_ROLL_PITCH_YAW_MAX_VALUE,
             $self->PITCH_DISPLAY_X, 100,
             $feeder_line_color, $window );
         $self->_draw_circle_value( $feeder->cur_yaw,
+            $self->FEEDER_ROLL_PITCH_YAW_MAX_VALUE,
             $self->YAW_DISPLAY_X,   100,
             $feeder_line_color, $window );
         $self->_draw_line_vert_indicator( $feeder->cur_vert_speed,
@@ -270,9 +299,17 @@ sub draw
             $window );
     }
 
-    $self->_draw_line_value(   $nav->roll,    $self->ROLL_DISPLAY_X,  100, $line_color, $window );
-    $self->_draw_line_value(   $nav->pitch,   $self->PITCH_DISPLAY_X, 100, $line_color, $window );
-    $self->_draw_circle_value( $nav->yaw,     $self->YAW_DISPLAY_X,   100, $line_color, $window );
+    $self->_draw_line_value( $nav->roll,    
+        $self->ROLL_PITCH_YAW_MAX_VALUE,
+        $self->ROLL_DISPLAY_X,  100, $line_color, $window );
+    $self->_draw_line_value( $nav->pitch,
+        $self->ROLL_PITCH_YAW_MAX_VALUE,
+        $self->PITCH_DISPLAY_X, 100, $line_color, $window );
+    # For the AR.Drone, yaw this seems to be an absolute heading.  For now, 
+    # decided to only show the input rather than the value back from the UAV.
+    #$self->_draw_circle_value( $nav->yaw,
+    #    $self->ROLL_PITCH_YAW_MAX_VALUE,
+    #    $self->YAW_DISPLAY_X,   100, $line_color, $window );
 
     # Should we draw anything for altitude?
     $self->_draw_bar_percent_value( $nav->battery_voltage_percentage,
@@ -291,9 +328,10 @@ before 'got_new_nav_packet' => sub {
 
 sub _draw_line_value
 {
-    my ($self, $value, $center_x, $center_y, $color, $window) = @_;
+    my ($self, $value, $max_value, $center_x, $center_y, $color, $window) = @_;
 
-    my $y_addition = int( $self->LINE_VALUE_HALF_MAX_HEIGHT * $value );
+    my $corrected_value = $value / $max_value;
+    my $y_addition = int( $self->LINE_VALUE_HALF_MAX_HEIGHT * $corrected_value);
     my $right_y = $center_y - $y_addition;
     my $left_y  = $center_y + $y_addition;
 
@@ -306,11 +344,14 @@ sub _draw_line_value
 
 sub _draw_circle_value
 {
-    my ($self, $value, $center_x, $center_y, $value_color, $window) = @_;
+    my ($self, $value, $max_value, $center_x, $center_y, $value_color, $window)
+        = @_;
     my $radius = $self->CIRCLE_VALUE_RADIUS;
     my $color = $self->DRAW_VALUE_COLOR;
 
-    my $angle  = Math::Trig::pip2 * $value; # Note use of radians, not degrees
+    my $corrected_value = $value / $max_value;
+    # Note use of radians, not degrees
+    my $angle  = Math::Trig::pip2 * $corrected_value;
     my $line_x = $center_x - (sin($angle) * $radius);
     my $line_y = $center_y - (cos($angle) * $radius);
 

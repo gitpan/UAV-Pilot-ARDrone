@@ -1,3 +1,26 @@
+# Copyright (c) 2014  Timm Murray
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright notice, 
+#       this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright 
+#       notice, this list of conditions and the following disclaimer in the 
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
 package UAV::Pilot::ARDrone::NavPacket;
 use v5.14;
 use Moose;
@@ -403,13 +426,13 @@ sub _parse_option_demo
 
     $args{control_state}              = $self->_convert_endian_32bit( @data[0..3]   );
     $args{battery_voltage_percentage} = $self->_convert_endian_32bit( @data[4..7]   );
-    $args{pitch}                      = $self->_to_float_32bit( @data[8..11]  );
-    $args{roll}                       = $self->_to_float_32bit( @data[12..15] );
-    $args{yaw}                        = $self->_to_float_32bit( @data[16..19] );
+    $args{pitch}                      = $self->_to_float_32bit_endian( @data[8..11]  );
+    $args{roll}                       = $self->_to_float_32bit_endian( @data[12..15] );
+    $args{yaw}                        = $self->_to_float_32bit_endian( @data[16..19] );
     $args{altitude}                   = $self->_convert_endian_32bit( @data[20..23] );
-    $args{velocity_x}                 = $self->_to_float_32bit( @data[24..27] );
-    $args{velocity_y}                 = $self->_to_float_32bit( @data[28..31] );
-    $args{velocity_z}                 = $self->_to_float_32bit( @data[32..35] );
+    $args{velocity_x}                 = $self->_convert_endian_32bit( @data[24..27] );
+    $args{velocity_y}                 = $self->_convert_endian_32bit( @data[28..31] );
+    $args{velocity_z}                 = $self->_convert_endian_32bit( @data[32..35] );
     $args{video_frame_index}          = $self->_convert_endian_32bit( @data[36..39] );
     # Bytes 40 - 47 are for deprecated parameters
     $args{camera_detection_type}      = $self->_convert_endian_32bit( @data[48..51] );
@@ -451,6 +474,17 @@ sub _to_float_32bit
         | ($bytes[2] << 8)
         | ($bytes[1] << 16)
         | ($bytes[0] << 24);
+    my $float = unpack( "f", pack( "l", $val ) );
+    return $float;
+}
+
+sub _to_float_32bit_endian
+{
+    my ($self, @bytes) = @_;
+    my $val = $bytes[0]
+        | ($bytes[1] << 8)
+        | ($bytes[2] << 16)
+        | ($bytes[3] << 24);
     my $float = unpack( "f", pack( "l", $val ) );
     return $float;
 }

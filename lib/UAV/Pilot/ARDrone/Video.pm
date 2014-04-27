@@ -1,9 +1,33 @@
+# Copyright (c) 2014  Timm Murray
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright notice, 
+#       this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright 
+#       notice, this list of conditions and the following disclaimer in the 
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
 package UAV::Pilot::ARDrone::Video;
 use v5.14;
 use Moose;
 use namespace::autoclean;
 use IO::Socket::INET;
 use UAV::Pilot::Video::H264Handler;
+use Time::HiRes ();
 
 use Data::Dumper 'Dumper';
 $Data::Dumper::Sortkeys = 1;
@@ -67,6 +91,7 @@ use constant {
 
 
 with 'UAV::Pilot::Logger';
+with 'UAV::Pilot::ARDrone::Video::BuildIO';
 
 
 has '_io' => (
@@ -137,22 +162,6 @@ sub BUILDARGS
     return $args;
 }
 
-
-sub init_event_loop
-{
-    my ($self) = @_;
-
-    my $io_event; $io_event = AnyEvent->io(
-        fh   => $self->_io,
-        poll => 'r',
-        cb   => sub {
-            $self->_process_io;
-            $io_event;
-        },
-    );
-    return 1;
-}
-
 sub emergency_restart
 {
     my ($self) = @_;
@@ -166,24 +175,6 @@ sub emergency_restart
 }
 
 
-sub _build_io
-{
-    my ($class, $args) = @_;
-    my $driver = $$args{driver};
-    my $host   = $driver->host;
-    my $port   = $driver->ARDRONE_PORT_VIDEO_H264;
-
-    my $io = IO::Socket::INET->new(
-        PeerAddr  => $host,
-        PeerPort  => $port,
-        ReuseAddr => 1,
-        Blocking  => 0,
-    ) or UAV::Pilot::IOException->throw(
-        error => "Could not connect to $host:$port for video: $@",
-    );
-    return $io;
-}
-
 # We split reading the PaVE header into two parts.  The first part needs just enough bytes 
 # to get us to the packet size.  From there, we know how big the header will actually be, 
 # so we will know if we have enough bytes yet to build the full thing.
@@ -195,6 +186,7 @@ sub _read_partial_pave_header
     my @bytes = $self->_byte_buffer_splice( 0, $self->PAVE_HEADER_PARTIAL_PROCESS_SIZE );
 
     my %packet;
+    $packet{'_initial_read_time'}    = [Time::HiRes::gettimeofday];
     $packet{signature}               = pack 'c4', @bytes[0..3];
     $packet{signature_int}           = UAV::Pilot->convert_32bit_LE( @bytes[0..3] );
     $packet{version}                 = $bytes[4];
@@ -260,6 +252,10 @@ sub _read_remaining_pave_header
     $self->_logger->info( "Frame num: " . $self->frames_processed
         . ", size: $packet{payload_size}" );
 
+
+    $self->_logger->info( 'VIDEO_FRAME_TIMER,START,' . $self->frames_processed
+        . ','
+        . join( ',', @{ +$packet{'_initial_read_time'} } ) );
 
     $self->_add_frames_processed( 1 );
     $self->_last_pave_header( \%packet );

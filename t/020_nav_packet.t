@@ -1,4 +1,27 @@
-use Test::More tests => 10;
+# Copyright (c) 2014  Timm Murray
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright notice, 
+#       this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright 
+#       notice, this list of conditions and the following disclaimer in the 
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
+use Test::More tests => 12;
 use v5.14;
 use warnings;
 
@@ -162,10 +185,9 @@ my $demo_packet_data = make_packet( join('',
 my $demo_packet = UAV::Pilot::ARDrone::NavPacket->new({
     packet => $demo_packet_data
 });
-cmp_ok( $demo_packet->battery_voltage_percentage, '==', 0x59, "Battery volt parsed" );
-cmp_ok( $demo_packet->pitch, '==', -0.800000011920929, "Pitch parsed" );
-cmp_ok( $demo_packet->roll, '>', 2.99569025183973e-39, "Roll parsed (less than float)" );
-cmp_ok( $demo_packet->roll, '<', 2.99569025183975e-39, "Roll parsed (greater than float)" );
+cmp_ok( 0x59, '==', $demo_packet->battery_voltage_percentage, "Battery volt parsed" );
+cmp_ok( -428447712, '==', $demo_packet->pitch, "Pitch parsed" );
+cmp_ok( -1265, '==', $demo_packet->roll, "Roll parsed" );
 
 
 my $demo_packet_nan_data = make_packet( join('',
@@ -213,6 +235,32 @@ my $demo_packet_nan = UAV::Pilot::ARDrone::NavPacket->new({
     packet => $demo_packet_nan_data
 });
 ok( $demo_packet_nan, "Successfully parsed data with NaN" );
+
+
+my $inflight_packet_data = make_packet( join('',
+    '88776655', # Header
+    'f504800f', # Drone state
+    'b5170000', # Sequence number
+    '01000000', # Vision flag
+    # Options
+    '0000', # Demo ID
+    '9400', # Demo Size (148 bytes)
+    '00000300', # Control state
+    '4c000000', # Battery voltage
+    '0000b8c2', # Pitch (-0.092 * 1000, according to NodeCopter)
+    '0000dcc3', # Roll (-0.44 * 1000, according to NodeCopter)
+    '00306546', # Yaw (14.668 * 1000, according to NodeCopter)
+    '16020000c73d86431d4143c300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000e53b7d3fd51816befe0733bb271d163e2f3a7d3fa356f13b01afd43a79dafbbbfafd7f3f65903544a9c4fec200808bc410004801000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffff0800e3230000'
+));
+my $inflight_packet = UAV::Pilot::ARDrone::NavPacket->new({
+    packet => $inflight_packet_data,
+});
+cmp_ok( -92, '==', $inflight_packet->pitch,
+    "Pitch parse matches NodeCopter parse" );
+cmp_ok( -440, '==', $inflight_packet->roll,
+    "Roll parse matches NodeCopter parse" );
+cmp_ok( 14668, '==', $inflight_packet->yaw,
+    "Yaw parse matches NodeCopter parse" );
 
 
 sub make_packet
