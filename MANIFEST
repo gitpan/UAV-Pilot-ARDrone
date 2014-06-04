@@ -11,6 +11,7 @@ TODO
 bin/ardrone_display_video.pl
 dist.ini
 lib/UAV/Pilot/ARDrone.pm
+lib/UAV/Pilot/ARDrone/Commands.pm
 lib/UAV/Pilot/ARDrone/Control.pm
 lib/UAV/Pilot/ARDrone/Control/Event.pm
 lib/UAV/Pilot/ARDrone/Driver.pm
@@ -26,7 +27,6 @@ lib/UAV/Pilot/ARDrone/Video/Stream.pm
 lib/UAV/Pilot/ARDrone/Video/Stream/Mock.pm
 script/nav_data_dump.js
 script/nav_data_dump.pl
-share/ARDrone.uav
 share/typeone.ttf
 t/001_load.t
 t/002_pod.t
