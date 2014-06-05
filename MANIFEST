@@ -46,4 +46,3 @@ t/190_control_nav_event.t
 t/210_commands_ardrone.t
 t_data/ardrone_video_stream_dump.bin
 t_data/ardrone_video_stream_dump_bad_pave.bin
-test.sh
