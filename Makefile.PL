@@ -34,13 +34,13 @@ my %WriteMakefileArgs = (
     "String::CRC32" => 0,
     "Test::More" => 0,
     "Time::HiRes" => 0,
-    "UAV::Pilot" => "1.0",
+    "UAV::Pilot" => "1.0_1",
     "namespace::autoclean" => 0
   },
   "TEST_REQUIRES" => {
     "Test::Pod" => 0
   },
-  "VERSION" => "0.5",
+  "VERSION" => "0.6",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -58,7 +58,7 @@ my %FallbackPrereqs = (
   "Test::More" => 0,
   "Test::Pod" => 0,
   "Time::HiRes" => 0,
-  "UAV::Pilot" => "1.0",
+  "UAV::Pilot" => "1.0_1",
   "namespace::autoclean" => 0
 );
 
