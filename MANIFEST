@@ -9,6 +9,7 @@ Makefile.PL
 README
 TODO
 bin/ardrone_display_video.pl
+bin/ardrone_fly
 dist.ini
 lib/UAV/Pilot/ARDrone.pm
 lib/UAV/Pilot/ARDrone/Commands.pm

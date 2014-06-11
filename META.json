@@ -1,10 +1,10 @@
 {
-   "abstract" : "UAV::Pilot driver for the Parrot AR.Drone",
+   "abstract" : "Implements the Parrot AR.Drone under UAV::Pilot",
    "author" : [
       "Timm Murray <tmurray@wumpus-cave.net>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4205",
+   "generated_by" : "Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.140640",
    "license" : [
       "bsd"
    ],
@@ -16,18 +16,18 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.42"
+            "ExtUtils::MakeMaker" : "6.30",
+            "File::ShareDir::Install" : "0.06"
          }
       },
       "runtime" : {
          "recommends" : {
-            "UAV::Pilot::SDL" : "0",
+            "UAV::Pilot::SDL" : "0.3",
             "UAV::Pilot::Video::Ffmpeg" : "0"
          },
          "requires" : {
             "AnyEvent" : "0",
             "AnyEvent::ReadLine::Gnu" : "0",
-            "File::ShareDir" : "1.00",
             "IO::Socket::Multicast" : "0",
             "Math::Trig" : "0",
             "Moose" : "0",
@@ -35,9 +35,8 @@
             "String::CRC32" : "0",
             "Test::More" : "0",
             "Time::HiRes" : "0",
-            "UAV::Pilot" : ">= 0.9",
-            "namespace::autoclean" : "0",
-            "perl" : ">= 5.14.0"
+            "UAV::Pilot" : "1.0_1",
+            "namespace::autoclean" : "0"
          }
       },
       "test" : {
@@ -46,44 +45,14 @@
          }
       }
    },
-   "provides" : {
-      "UAV::Pilot::ARDrone" : {
-         "file" : "lib/UAV/Pilot/ARDrone.pm",
-         "version" : "0.2"
-      },
-      "UAV::Pilot::ARDrone::Control" : {
-         "file" : "lib/UAV/Pilot/ARDrone/Control.pm"
-      },
-      "UAV::Pilot::ARDrone::Control::Event" : {
-         "file" : "lib/UAV/Pilot/ARDrone/Control/Event.pm"
-      },
-      "UAV::Pilot::ARDrone::Driver" : {
-         "file" : "lib/UAV/Pilot/ARDrone/Driver.pm"
-      },
-      "UAV::Pilot::ARDrone::Driver::Mock" : {
-         "file" : "lib/UAV/Pilot/ARDrone/Driver/Mock.pm"
-      },
-      "UAV::Pilot::ARDrone::NavPacket" : {
-         "file" : "lib/UAV/Pilot/ARDrone/NavPacket.pm"
-      },
-      "UAV::Pilot::ARDrone::SDLNavOutput" : {
-         "file" : "lib/UAV/Pilot/ARDrone/SDLNavOutput.pm"
-      },
-      "UAV::Pilot::ARDrone::Video" : {
-         "file" : "lib/UAV/Pilot/ARDrone/Video.pm"
-      },
-      "UAV::Pilot::ARDrone::Video::Mock" : {
-         "file" : "lib/UAV/Pilot/ARDrone/Video/Mock.pm"
-      }
-   },
-   "release_status" : "stable",
+   "release_status" : "testing",
    "resources" : {
-      "license" : [
-         "http://opensource.org/licenses/BSD-3-Clause"
-      ],
+      "homepage" : "http://www.wumpus-cave.net",
       "repository" : {
-         "url" : "https://github.com/frezik/UAV-Pilot-ARDrone"
+         "type" : "git",
+         "web" : "https://github.com/frezik/UAV-Pilot-ARDrone"
       }
    },
-   "version" : "0.2"
+   "version" : "1.0_1"
 }
+
